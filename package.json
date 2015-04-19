@@ -1,0 +1,24 @@
+{
+  "name": "reverse-snake",
+  "version": "1.0.0",
+  "description": "Phonegap game",
+  "author": "Nikolay Kuznetsov",
+  "homepage": "https://github.com/nikuz/reverse-snake-game",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nikuz/reverse-snake-game"
+  },
+  "bugs": {
+    "url": "https://github.com/nikuz/reverse-snake-game/issues"
+  },
+  "private": false,
+  "dependencies": {
+    "babel": "latest",
+    "grunt": "latest",
+    "bower": "latest",
+    "bower-installer": "latest",
+    "karma": "latest",
+    "jasmine": "latest"
+  },
+  "bundleDependencies": []
+}

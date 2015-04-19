@@ -1,0 +1,11 @@
+{
+  "name" : "bower components",
+  "version": "0.1",
+  "dependencies" : {
+    "jquery" : "latest",
+    "pathfinding" : "latest",
+    "reflux" : "latest",
+    "requirejs" : "latest",
+    "underscore" : "latest"
+  }
+}

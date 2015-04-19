@@ -1,0 +1,43 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+#canvas {
+    position: relative;
+    margin: 0 auto;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+#counter {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 5px 10px;
+    border: 2px solid #000;
+    font-size: 20px;
+}
+.point {
+    background-color: blue;
+    position: absolute;
+}
+
+.snake-piece {
+    position: absolute;
+    background-color: #f00;
+}
+
+.snake-tooltip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 3px 5px;
+    border-radius: 3px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, .6);
+    background-color: #FFF;
+    z-index: 20;
+}
