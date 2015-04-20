@@ -20,6 +20,8 @@ require.config({
     reflux: 'bower_components/reflux/dist/reflux',
     underscore: 'bower_components/underscore/underscore',
     pathfinding: 'bower_components/pathfinding/pathfinding-browser',
+    settings: 'build/javascript/settings',
+    logger: 'build/javascript/logger',
     world: 'build/javascript/world',
     snake: 'build/javascript/snake',
     'snake-piece': 'build/javascript/snake-piece'

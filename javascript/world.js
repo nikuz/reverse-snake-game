@@ -1,8 +1,10 @@
 'use strict';
 
+import * as settings from 'settings';
 import * as $ from 'jquery';
 import * as _ from 'underscore';
 import * as Reflux from 'reflux';
+import {log} from 'logger';
 
 export class World {
   constructor(options) {
@@ -54,7 +56,26 @@ export class World {
     });
     this.canvas.on('click', e => {
       this.pointAdd(e);
-    })
+    });
+
+    if (settings.dev) {
+      let mapCells = '';
+      _.each(this.map, (string, stringIndex) => {
+        _.each(string, (point, pointIndex) => {
+          mapCells += `<div class="map-cell" style="left:${point._left}px; top:${point._top}px; width:${this.pixel}px; height:${this.pixel}px">
+                          ${stringIndex}:${pointIndex}
+                       </div>`;
+        });
+      });
+      this.devCanvas = $('#dev_canvas');
+      this.devCanvas.css({
+        left: $(this.canvas).offset().left
+      });
+      $(this.devCanvas).append(mapCells);
+      $(this.canvas).css({
+        opacity: .5
+      });
+    }
   }
   mapGenerate(opts) {
     opts = opts || {
@@ -92,7 +113,7 @@ export class World {
     if (target.id.indexOf('piece_') === 0) {
       this.actions.snakeClamped();
       return false;
-    } else if (target.id !== 'canvas') {
+    } else if (this.snake.trapped || target.id !== 'canvas') {
       return false;
     } else {
       this.pointsLength += 1;
@@ -132,6 +153,7 @@ export class World {
     this.points.push(point);
     this.pointDraw(point);
     this.actions.pointCreated();
+    log('Point created');
     return point;
   }
   pointDraw(pointItem) {
@@ -189,6 +211,7 @@ export class World {
   }
   animationStart() {
     if (_.isEmpty(this.animationTasks)) {
+      log('Empty animations');
       this.animationStop();
       return;
     }
@@ -203,19 +226,32 @@ export class World {
       }
     });
 
-    this.animation = requestAnimationFrame(() => {
-      this.animationStart();
-    });
+    if (settings.dev) {
+      this.animation = setTimeout(() => {
+        this.animationStart();
+      }, settings.animationSpeed);
+    } else {
+      this.animation = requestAnimationFrame(() => {
+        this.animationStart();
+      });
+    }
   }
   animationStop() {
     if (this.animation) {
-      cancelAnimationFrame(this.animation);
+      log('Clear animations frame');
+      if (settings.dev) {
+        cancelAnimationFrame(this.animation);
+      } else {
+        clearTimeout(this.animation);
+      }
     }
   }
   animationAdd(animationTask) {
     if (animationTask.name) {
       this.animationTasks[animationTask.name] = animationTask;
-      this.animationStart();
+      if (!this.animation) {
+        this.animationStart();
+      }
     }
     return animationTask.name !== undefined;
   }

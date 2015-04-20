@@ -5,5 +5,5 @@ import {Snake} from 'snake';
 
 var world = new World();
 var snake = new Snake(world, {
-  inmove: false
+  //inmove: false
 });

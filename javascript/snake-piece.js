@@ -6,7 +6,31 @@ import * as Reflux from 'reflux';
 export class SnakePiece {
   constructor(options) {
     var opts = options || {};
+    this.validate(opts);
+  }
+  validate(opts) {
+    var requiredFields = [
+        'index',
+        'worldSize',
+        'worldMap',
+        'worldPixel',
+        'snakeBody',
+        'snakePosition',
+        'snakeDirection'
+      ],
+      i = 0, l = requiredFields.length,
+      field;
 
+    for(; i<l; i++) {
+      field = requiredFields[i];
+      if (opts[field] === undefined) {
+        return false;
+      }
+    }
+    this.create(opts);
+    return true;
+  }
+  create(opts) {
     this.position = this.getPiecePosition(opts);
     var worldCell = opts.worldMap[this.position.top][this.position.left];
     this.position._left = worldCell._left;
@@ -54,8 +78,8 @@ export class SnakePiece {
     return this.checkIsOutOf(opts, position);
   }
   checkIsOutOf(opts, position) {
-    var ww = opts.worldSize.width,
-      wh = opts.worldSize.height,
+    var ww = opts.worldSize.width - 1,
+      wh = opts.worldSize.height - 1,
       iterator = position.attempt ? -1 : 1,
       outOf;
 
@@ -68,12 +92,12 @@ export class SnakePiece {
       position.top += iterator;
       outOf = true;
     } else if (position.top > wh) {
-      position.left += iterator;
       position.top = wh;
+      position.left += iterator;
       outOf = true;
     } else if (position.top < 0) {
-      position.left += iterator;
       position.top = 0;
+      position.left += iterator;
       outOf = true;
     }
     position.attempt = (position.attempt + 1) || 1;
@@ -85,7 +109,7 @@ export class SnakePiece {
   }
   draw(opts) {
     var pieceId = `piece_${opts.index}`;
-    this.el = $(`<div class="snake-piece" id="${pieceId}"></div>`);
+    this.el = $(`<div id="${pieceId}"></div>`);
     this.el.css({
       width: opts.worldPixel,
       height: opts.worldPixel,

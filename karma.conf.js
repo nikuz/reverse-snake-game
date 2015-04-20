@@ -17,9 +17,9 @@ module.exports = function(config) {
     files: [
       {pattern: 'build/javascript/*.js', included: false},
       {pattern: 'bower_components/**/*.js', included: false},
-      //{pattern: 'build/test/world.test.js', included: false},
+      {pattern: 'build/test/world.test.js', included: false},
       {pattern: 'build/test/snake-piece.test.js', included: false},
-      //{pattern: 'build/test/snake.test.js', included: false},
+      {pattern: 'build/test/snake.test.js', included: false},
       'test/test-main.js'
     ],
 

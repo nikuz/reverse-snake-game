@@ -5,6 +5,7 @@ import * as $ from 'jquery';
 import * as _ from 'underscore';
 import * as PF from 'pathfinding';
 import * as Reflux from 'reflux';
+import {log} from 'logger';
 
 export class Snake {
   constructor(world, options) {
@@ -30,51 +31,74 @@ export class Snake {
     ]);
 
     world.actions.snakeClamped.listen(() => {
-      this.clamped();
+      this.clampedSay();
     });
     world.actions.pointCreated.listen(() => {
       this.moveInterrupt(world);
       this.targetGet(world);
     });
     this.draw(world);
+    this.targetGet(world);
   }
   draw(world) {
     this.el = $('#snake');
     var i = 0, l = this.length;
     for (; i < l; i++) {
-      this.pieces.push(this.pieceAdd(world, i));
+      this.pieceAdd(world, i);
     }
   }
   targetGet(world) {
     var shadowPoints = world.shadowPointsGet(),
       points = world.points.length ? world.points : shadowPoints;
 
-    var loop = (points, curIndex, curPoint, curPath, isShadow) => {
-      if (!points || !points.length) return false;
-      for (let j = 0; j<l; j++) {
-        if (isShadow || curIndex !== j) {
-          return this.targetTryNext(world, curIndex, curPoint, curPath, points[j]);
+    var curLoop = (points) => {
+      var i = 0, l = points.length,
+        point, tryPath, target;
+
+      for (; i < l; i++) {
+        point = points[i];
+        tryPath = this.getPath(world, null, {
+          point: point
+        });
+        if (tryPath.length) {
+          if (points !== shadowPoints) {
+            target = nextLoop(points, i, point, tryPath) || nextLoop(shadowPoints, i, point, tryPath, true);
+          } else {
+            target = nextLoop(points, i, point, tryPath);
+          }
+          if (target) {
+            return target;
+          }
         }
       }
     };
 
-    var i = 0, l = points.length,
-      point, tryPath, target;
+    var nextLoop = (points, curIndex, curPoint, curPath, isShadow) => {
+      if (!points || !points.length) return false;
 
-    for (; i < l; i++) {
-      point = points[i];
-      tryPath = this.getPath(world, null, {
-        point: point
-      });
-      if (tryPath.length) {
-        target = loop(points, i, point, tryPath) || (points !== shadowPoints && loop(shadowPoints, i, point, tryPath, true));
-        if (target) {
-          this.targetSet(target);
-          this.inmove && this.move(world);
-          return target;
+      var i = 0, l = points.length,
+        nextTryPath;
+
+      for (; i<l; i++) {
+        if (isShadow || curIndex !== i) {
+          nextTryPath = this.targetTryNext(world, curIndex, curPoint, curPath, points[i]);
+          if (nextTryPath) {
+            return nextTryPath;
+          }
         }
       }
+    };
+
+    var target = points !== shadowPoints ? curLoop(points) || curLoop(shadowPoints) : curLoop(shadowPoints);
+    if (target) {
+      this.targetSet(target);
+      this.inmove && this.move(world);
+      return target;
     }
+
+    log('No one point is achievable');
+    this.trappedSay();
+    return false;
   }
   targetTryNext(world, curPointIndex, curPoint, curPath, nextPoint) {
     var curPathLastPoint = curPath.length - 1,
@@ -116,8 +140,9 @@ export class Snake {
     }
   }
   targetSet(target) {
-    if (_.isObject(target) && target.index && target.point && target.path) {
+    if (_.isObject(target) && !_.isUndefined(target.index) && target.point && target.path) {
       this.target = target;
+      this.logSet(target.path);
       return true;
     } else {
       return false;
@@ -144,9 +169,10 @@ export class Snake {
             target = this.target.point;
 
           if (position.left === target.left && position.top === target.top) {
+            log('Stop moved');
             this.targetReached(world);
           } else {
-            this.trapped();
+            this.trappedSay();
           }
         }
       };
@@ -169,16 +195,20 @@ export class Snake {
       });
     });
     world.animationAdd(animationTask);
-    console.log('start moved');
+    log('Start moved');
   }
   moveInterrupt(world) {
     this.target = null;
     world.animationRemove('snake_move');
-    console.log('Stop moved');
+    log('Moved Interrupt');
   }
   getPath(world, curPosition, target, nextSnakePosition) {
     curPosition = curPosition || this.position;
     target = target || this.target;
+    if (curPosition.left === target.point.left && curPosition.top === target.point.top) {
+      return [];
+    }
+
     var matrix = [];
     _.each(world.map, string => {
       var matrixString = [];
@@ -232,8 +262,9 @@ export class Snake {
     );
   }
   setDirection() {
-    var last = this.pieces[this.length - 2].position,
-      beforeLast = this.pieces[this.length - 3].position;
+    var length = this.pieces.length,
+      last = this.pieces[length - 1].position,
+      beforeLast = this.pieces[length - 2].position;
 
     if (last.left < beforeLast.left) {
       this.direction = 'right';
@@ -244,6 +275,7 @@ export class Snake {
     } else if (last.top > beforeLast.top) {
       this.direction = 'top';
     }
+    return this.direction;
   }
   pieceAdd(world, index) {
     var piece = new SnakePiece({
@@ -262,12 +294,30 @@ export class Snake {
       snakeDirection: this.direction
     });
     $(this.el).append(piece.el);
+    this.pieces.push(piece);
     return piece;
   }
-  clamped() {
-    this.pieces[0].say('Opps');
+  clampedSay() {
+    this.say('Opps');
   }
-  trapped() {
-    this.pieces[0].say('I am trapped');
+  trappedSay() {
+    this.trapped = true;
+    this.say('I am trapped');
+    this.logList();
+  }
+  say(words) {
+    this.pieces[0].say(words);
+  }
+  logSet(path) {
+    this.log = this.log || [];
+    this.log.push(path);
+    if (this.log.length > 5) {
+      this.log.splice(0, this.log.length - 5);
+    }
+  }
+  logList() {
+    _.each(this.log, item => {
+      log(item);
+    });
   }
 }

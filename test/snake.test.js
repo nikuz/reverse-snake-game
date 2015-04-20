@@ -6,7 +6,7 @@ import {SnakePiece} from 'snake-piece';
 import * as _ from 'underscore';
 import * as $ from 'jquery';
 
-/*describe('Snake - Create', () => {
+describe('Snake - Create', () => {
   var world = new World(),
     length = 10,
     position = {
@@ -26,9 +26,9 @@ import * as $ from 'jquery';
     expect(snake.position).toEqual(position);
     expect(snake.direction).toEqual(direction);
   });
-});*/
+});
 
-/*describe('Snake - Path get', () => {
+describe('Snake - Path get', () => {
   var world = new World(),
     width = 50, // count of pixels by width
     height = 28, // count of pixels by height
@@ -124,9 +124,9 @@ import * as $ from 'jquery';
     });
     expect(path.length).toEqual(0);
   });
-});*/
+});
 
-/*describe('Snake - Target try next (considering the current path)', () => {
+describe('Snake - Target try next (considering the current path)', () => {
   var world = new World(),
     points = [{
       top: 10,
@@ -197,34 +197,209 @@ describe('Snake - Target set', () => {
 });
 
 describe('Snake - Target get', () => {
-  var world = new World(),
-    points = [{
-      top: 10,
-      left: 10,
-      id: 'point_1'
-    }, {
-      top: 10,
-      left: 15,
-      id: 'point_2'
-    }, {
-      top: 9,
-      left: 10,
-      id: 'point_3'
-    }, {
-      top: 10,
-      left: 13,
-      id: 'point_4'
-    }],
-    snake = new Snake(world, {
-      inmove: false,
-      position: points[0],
-      direction: 'top'
-    });
+  it('should return next target if world has points', () => {
+    var world = new World(),
+      points = [{
+        top: 10,
+        left: 10,
+        id: 'point_1'
+      }, {
+        top: 10,
+        left: 15,
+        id: 'point_2'
+      }, {
+        top: 9,
+        left: 10,
+        id: 'point_3'
+      }, {
+        top: 10,
+        left: 13,
+        id: 'point_4'
+      }],
+      snake = new Snake(world, {
+        inmove: false,
+        position: points[0],
+        direction: 'top'
+      });
 
-  world.points = points;
+    world.points = points;
 
-  it('should get next target for snake', () => {
     var target = snake.targetGet(world);
     expect(target.point).toEqual(points[1]);
+  });
+  it('should return shadow target if world hasn\'t points', () => {
+    var world = new World(),
+      shadowPoints = _.clone(world.shadowPoints),
+      snake = new Snake(world, {
+        inmove: false,
+        position: shadowPoints[0],
+        direction: 'top'
+      });
+
+    var target = snake.targetGet(world);
+    // will second point because current snake position is equal zero point position
+    // and first point was shifted to the end of shadowPoints when snake was created
+    expect(target.point).toEqual(shadowPoints[2]);
+  });
+  it('should return shadow target considering the wall', () => {
+    var world = new World(),
+      width = 50,
+      height = 28,
+      map = world.mapGenerate({
+        width: width,
+        height: height,
+        pixelPercent: 2
+      });
+
+    world.shadowPointsGenerate({
+      map: map,
+      width: width,
+      height: height
+    });
+
+    var shadowPoints = _.clone(world.shadowPoints),
+      snake = new Snake(world, {
+        inmove: false,
+        position: shadowPoints[0],
+        direction: 'top'
+      });
+
+    // create vertical wall at the center of the world canvas
+    var i = 0, l = world.height;
+    for (; i<l; i++) {
+      snake.pieces.push({
+        position: {
+          left: 25,
+          top: i
+        }
+      });
+    }
+
+    var target = snake.targetGet(world);
+    // will third point because snake can't get access to first and second points through wall
+    expect(target.point).toEqual(shadowPoints[3]);
+  });
+  it('should return false because no one point is achievable', () => {
+    var world = new World(),
+      width = 50,
+      height = 28,
+      map = world.mapGenerate({
+        width: width,
+        height: height,
+        pixelPercent: 2
+      });
+
+    world.shadowPointsGenerate({
+      map: map,
+      width: width,
+      height: height
+    });
+
+    var shadowPoints = _.clone(world.shadowPoints),
+      snake = new Snake(world, {
+        inmove: false,
+        position: shadowPoints[0],
+        direction: 'top'
+      });
+
+    // create vertical wall at the center of the world canvas
+    var i = 0, l = world.height;
+    for (; i<l; i++) {
+      snake.pieces.push({
+        position: {
+          left: 25,
+          top: i
+        }
+      });
+    }
+    // create horizontal wall at the center of the world canvas
+    i = 0; l = world.width;
+    for (; i<l; i++) {
+      snake.pieces.push({
+        position: {
+          left: i,
+          top: 14
+        }
+      });
+    }
+
+    expect(snake.targetGet(world)).toEqual(false);
+  });
+});
+
+describe('Snake - Direction set', () => {
+  var world = new World(),
+    snake = new Snake(world, {
+      inmove: false,
+      length: 5,
+      position: {
+        left: 10,
+        top: 1
+      }
+    });
+
+  it('should return "left" direction', () => {
+    snake.pieces.push({
+      position: {
+        top: 5,
+        left: 11
+      }
+    });
+    snake.length = snake.pieces.length;
+    expect(snake.setDirection()).toEqual('left');
+  });
+  it('should return "top" direction', () => {
+    snake.pieces.push({
+      position: {
+        top: 6,
+        left: 11
+      }
+    });
+    snake.length = snake.pieces.length;
+    expect(snake.setDirection()).toEqual('top');
+  });
+  it('should return "right" direction', () => {
+    snake.pieces.push({
+      position: {
+        top: 6,
+        left: 10
+      }
+    });
+    snake.length = snake.pieces.length;
+    expect(snake.setDirection()).toEqual('right');
+  });
+  it('should return "bottom" direction', () => {
+    snake.pieces.push({
+      position: {
+        top: 5,
+        left: 10
+      }
+    });
+    snake.length = snake.pieces.length;
+    expect(snake.setDirection()).toEqual('bottom');
+  });
+});
+
+/*
+describe('Snake - Move', () => {
+  var world = new World(),
+    snake = new Snake(world, {
+      inmove: false,
+      length: 5,
+      position: {
+        left: 10,
+        top: 1
+      }
+    });
+
+  it('should return "left" direction', () => {
+    snake.pieces.push({
+      position: {
+        top: 5,
+        left: 11
+      }
+    });
+    snake.length = snake.pieces.length;
+    expect(snake.setDirection()).toEqual('left');
   });
 });*/
