@@ -20,36 +20,36 @@ var defaultSnakePosition  = {
 };
 
 export class Snake {
-  constructor(world, options) {
+  constructor(canvas, options) {
     options = options || {};
     _.extend(this, defaultsSnakeOptions, options);
     this.position = {};
     _.extend(this.position, defaultSnakePosition);
 
-    world.snake = this;
-    world.actions.snakeCreated();
+    canvas.snake = this;
+    canvas.actions.snakeCreated();
 
     this.actions = Reflux.createActions([
       'lengthChanged',
       'trapped'
     ]);
 
-    world.actions.snakeClamped.listen(() => {
+    canvas.actions.snakeClamped.listen(() => {
       this.clampedSay();
     });
-    world.actions.pointCreated.listen(() => {
-      this.moveInterrupt(world);
-      this.targetGet(world);
+    canvas.actions.pointCreated.listen(() => {
+      this.moveInterrupt(canvas);
+      this.targetGet(canvas);
     });
-    this.draw(world);
-    this.targetGet(world);
+    this.draw(canvas);
+    this.targetGet(canvas);
   }
-  draw(world) {
+  draw(canvas) {
     this.pieces = [];
     this.el = $('#snake');
     var i = 0, l = this.length;
     for (; i < l; i++) {
-      this.pieceAdd(world, i);
+      this.pieceAdd(canvas, i);
     }
 
     //if (settings.dev) {
@@ -60,15 +60,15 @@ export class Snake {
     //    piece.move({
     //      top: top,
     //      left: left,
-    //      _top: top * world.pixel,
-    //      _left: left * world.pixel
+    //      _top: top * canvas.pixel,
+    //      _left: left * canvas.pixel
     //    });
     //  });
     //}
   }
-  targetGet(world) {
-    var shadowPoints = world.shadowPointsGet(),
-      points = world.points.length ? world.points : shadowPoints;
+  targetGet(canvas) {
+    var shadowPoints = canvas.shadowPointsGet(),
+      points = canvas.points.length ? canvas.points : shadowPoints;
 
     var curLoop = (points) => {
       var i = 0, l = points.length,
@@ -76,7 +76,7 @@ export class Snake {
 
       for (; i < l; i++) {
         point = points[i];
-        tryPath = this.getPath(world, null, {
+        tryPath = this.getPath(canvas, null, {
           point: point
         });
         if (tryPath.length) {
@@ -100,7 +100,7 @@ export class Snake {
 
       for (; i<l; i++) {
         if (isShadow || curIndex !== i) {
-          nextTryPath = this.targetTryNext(world, curIndex, curPoint, curPath, points[i]);
+          nextTryPath = this.targetTryNext(canvas, curIndex, curPoint, curPath, points[i]);
           if (nextTryPath) {
             return nextTryPath;
           }
@@ -111,7 +111,7 @@ export class Snake {
     var target = points !== shadowPoints ? curLoop(points) || curLoop(shadowPoints) : curLoop(shadowPoints);
     if (target) {
       this.targetSet(target);
-      this.inmove && this.move(world);
+      this.inmove && this.move(canvas);
       return target;
     }
 
@@ -119,7 +119,7 @@ export class Snake {
     this.trappedSay();
     return false;
   }
-  targetTryNext(world, curPointIndex, curPoint, curPath, nextPoint) {
+  targetTryNext(canvas, curPointIndex, curPoint, curPath, nextPoint) {
     var curPathLastPoint = curPath.length - 1,
       nextPosition = {
         top: curPath[curPathLastPoint][1],
@@ -146,7 +146,7 @@ export class Snake {
       }
     }
 
-    var nextPath = this.getPath(world, nextPosition, nextTarget, nextSnakePosition);
+    var nextPath = this.getPath(canvas, nextPosition, nextTarget, nextSnakePosition);
 
     if (nextPath.length) {
       return {
@@ -173,20 +173,20 @@ export class Snake {
 
     return position.left === target.left && position.top === target.top;
   }
-  targetReached(world, getNext) {
+  targetReached(canvas, getNext) {
     if (this.target.index !== 'shadow_point') {
-      world.pointRemove(this.target.index);
+      canvas.pointRemove(this.target.index);
       this.length += 1;
       this.setDirection();
-      this.pieceAdd(world, this.length - 1);
+      this.pieceAdd(canvas, this.length - 1);
       this.actions.lengthChanged();
     }
     this.target = null;
     if (getNext) {
-      this.targetGet(world);
+      this.targetGet(canvas);
     }
   }
-  move(world) {
+  move(canvas) {
     var path = this.target.path,
       animationTask = {
         name: 'snake_move',
@@ -194,7 +194,7 @@ export class Snake {
         callback: () => {
           if (this.checkTargetReached()) {
             log('Stop moved');
-            this.targetReached(world, true);
+            this.targetReached(canvas, true);
           } else {
             this.trappedSay();
           }
@@ -204,7 +204,7 @@ export class Snake {
     _.each(path, pathPoint => {
       animationTask.frames.push(() => {
         var chainPoint, chainPrevPoint,
-          nextPoint = world.map[pathPoint[1]][pathPoint[0]];
+          nextPoint = canvas.map[pathPoint[1]][pathPoint[0]];
 
         _.extend(this.position, nextPoint);
         _.each(this.pieces, (piece, pieceIndex) => {
@@ -218,18 +218,18 @@ export class Snake {
         });
       });
     });
-    world.animationAdd(animationTask);
+    canvas.animationAdd(animationTask);
     log('Start moved');
   }
-  moveInterrupt(world) {
-    world.animationRemove('snake_move');
+  moveInterrupt(canvas) {
+    canvas.animationRemove('snake_move');
     log('Moved Interrupt');
     if (this.checkTargetReached()) {
-      this.targetReached(world, false);
+      this.targetReached(canvas, false);
     }
     this.target = null;
   }
-  getPath(world, curPosition, target, nextSnakePosition) {
+  getPath(canvas, curPosition, target, nextSnakePosition) {
     curPosition = curPosition || this.position;
     target = target || this.target;
     if (curPosition.left === target.point.left && curPosition.top === target.point.top) {
@@ -237,7 +237,7 @@ export class Snake {
     }
 
     var matrix = [];
-    _.each(world.map, string => {
+    _.each(canvas.map, string => {
       var matrixString = [];
       _.each(string, pixel => {
         let i = 0, l,
@@ -263,9 +263,9 @@ export class Snake {
           }
         }
 
-        i = 0; l = world.points.length;
+        i = 0; l = canvas.points.length;
         for (; i<l; i++) {
-          piece = world.points[i];
+          piece = canvas.points[i];
           if (piece !== target.point && piece.top === pixel.top && piece.left === pixel.left) {
             result = 1;
             break;
@@ -308,15 +308,15 @@ export class Snake {
     }
     return this.direction;
   }
-  pieceAdd(world, index) {
+  pieceAdd(canvas, index) {
     var piece = new SnakePiece({
       index: index,
-      worldSize: {
-        width: world.width,
-        height: world.height
+      canvasSize: {
+        width: canvas.width,
+        height: canvas.height
       },
-      worldMap: world.map,
-      worldPixel: world.pixel,
+      canvasMap: canvas.map,
+      canvasPixel: canvas.pixel,
       snakePosition: {
         top: this.position.top,
         left: this.position.left

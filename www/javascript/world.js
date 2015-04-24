@@ -1,6 +1,6 @@
 'use strict';
 
-import {World} from 'world';
+import {Canvas} from 'canvas';
 import {Snake} from 'snake';
 
 var isReady;
@@ -13,8 +13,8 @@ $(document).ready(function(){
 
 function ready() {
   isReady = true;
-  var world = new World();
-  var snake = new Snake(world, {
+  var canvas = new Canvas();
+  var snake = new Snake(canvas, {
     //inmove: false,
     position: {
       top: 5,

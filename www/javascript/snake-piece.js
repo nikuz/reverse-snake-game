@@ -11,9 +11,9 @@ export class SnakePiece {
   validate(opts) {
     var requiredFields = [
         'index',
-        'worldSize',
-        'worldMap',
-        'worldPixel',
+        'canvasSize',
+        'canvasMap',
+        'canvasPixel',
         'snakeBody',
         'snakePosition',
         'snakeDirection'
@@ -32,9 +32,9 @@ export class SnakePiece {
   }
   create(opts) {
     this.position = this.getPiecePosition(opts);
-    var worldCell = opts.worldMap[this.position.top][this.position.left];
-    this.position._left = worldCell._left;
-    this.position._top = worldCell._top;
+    var canvasCell = opts.canvasMap[this.position.top][this.position.left];
+    this.position._left = canvasCell._left;
+    this.position._top = canvasCell._top;
     if (opts.index === 0) {
       this.head = true;
     }
@@ -78,8 +78,8 @@ export class SnakePiece {
     return this.checkIsOutOf(opts, position);
   }
   checkIsOutOf(opts, position) {
-    var ww = opts.worldSize.width - 1,
-      wh = opts.worldSize.height - 1,
+    var ww = opts.canvasSize.width - 1,
+      wh = opts.canvasSize.height - 1,
       iterator = position.attempt ? -1 : 1,
       outOf;
 
@@ -116,8 +116,8 @@ export class SnakePiece {
     var pieceId = `piece_${opts.index}`;
     this.el = $(`<div id="${pieceId}" class="${this.position.direction}"></div>`);
     this.el.css({
-      width: opts.worldPixel,
-      height: opts.worldPixel,
+      width: opts.canvasPixel,
+      height: opts.canvasPixel,
       left: this.position._left,
       top: this.position._top
     });

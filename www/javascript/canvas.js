@@ -6,7 +6,7 @@ import * as _ from 'underscore';
 import * as Reflux from 'reflux';
 import {log} from 'logger';
 
-export class World {
+export class Canvas {
   constructor(options) {
     this.opts = options || {};
 
@@ -62,12 +62,11 @@ export class World {
     return size;
   }
   draw() {
-    this.canvas = $('#canvas');
-    this.canvas.css({
+    this.el = $('#canvas');
+    this.el.css({
       width: this._width,
       height: this._height
-    });
-    this.canvas.on('touchstart', e => {
+    }).on('touchstart', e => {
       this.pointAdd(e.originalEvent);
     });
     $('#pause').on('click', () => {
@@ -79,7 +78,7 @@ export class World {
     });
 
     if (settings.dev) {
-      this.canvas.on('click', () => {
+      this.el.on('click', () => {
         this.animationStop();
       });
       let mapCells = [],
@@ -101,10 +100,10 @@ export class World {
       });
       devCanvas = $('#dev_canvas');
       devCanvas.css({
-        left: $(this.canvas).offset().left
+        left: $(this.el).offset().left
       }).append(mapCells);
 
-      $(this.canvas).css({
+      $(this.el).css({
         opacity: .5
       });
     }
@@ -191,7 +190,7 @@ export class World {
     return point;
   }
   pointDraw(pointItem) {
-    $(this.canvas).append(`<div class="point" id="${pointItem.id}"></div>`);
+    $(this.el).append(`<div class="point" id="${pointItem.id}"></div>`);
     $('#' + pointItem.id).css({
       left: pointItem._left,
       top: pointItem._top,
