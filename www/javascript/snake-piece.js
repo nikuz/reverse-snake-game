@@ -86,21 +86,26 @@ export class SnakePiece {
     if (position.left > ww) {
       position.left = ww;
       position.top += iterator;
+      position.direction = iterator > 0 ? 'top' : 'bottom';
       outOf = true;
     } else if (position.left < 0) {
       position.left = 0;
       position.top += iterator;
+      position.direction = iterator > 0 ? 'top' : 'bottom';
       outOf = true;
     } else if (position.top > wh) {
       position.top = wh;
       position.left += iterator;
+      position.direction = iterator > 0 ? 'right' : 'left';
       outOf = true;
     } else if (position.top < 0) {
       position.top = 0;
       position.left += iterator;
+      position.direction = iterator > 0 ? 'right' : 'left';
       outOf = true;
     }
     position.attempt = (position.attempt + 1) || 1;
+    position.direction = position.direction || opts.snakeDirection;
     if (!outOf || position.attempt > 5) {
       return position;
     } else if (outOf) {
@@ -109,7 +114,7 @@ export class SnakePiece {
   }
   draw(opts) {
     var pieceId = `piece_${opts.index}`;
-    this.el = $(`<div id="${pieceId}"></div>`);
+    this.el = $(`<div id="${pieceId}" class="${this.position.direction}"></div>`);
     this.el.css({
       width: opts.worldPixel,
       height: opts.worldPixel,
@@ -117,12 +122,41 @@ export class SnakePiece {
       top: this.position._top
     });
   }
-  move(point) {
-    this.position = point;
+  move(point, nextPiece, isTail) {
+    var direction,
+      nextPieceDirection = nextPiece && nextPiece.position.direction,
+      cornerCl = '';
+
+    if (isTail) {
+      direction = nextPieceDirection;
+    } else {
+      var curP = this.position,
+        curL = curP.left,
+        curT = curP.top,
+        L = point.left,
+        T = point.top;
+
+      if (curL < L) {
+        direction = 'right';
+      } else if (curL > L) {
+        direction = 'left';
+      } else if (curT < T) {
+        direction = 'bottom';
+      } else if (curT > T) {
+        direction = 'top';
+      }
+
+      if (!this.head) {
+        if (direction !== nextPieceDirection) {
+          cornerCl = 'cr_' + direction + '_' + nextPieceDirection;
+        }
+      }
+    }
+    _.extend(this.position, point, {direction: direction});
     $(this.el).css({
       'left': point._left,
       'top': point._top
-    });
+    }).attr('class', direction + ' ' + cornerCl);
   }
   say(message) {
     if (!this.tooltip) {

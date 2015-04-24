@@ -1,6 +1,6 @@
 "use strict";
 
-import * as settings from 'settings';
+import {settings} from 'settings';
 
 export var log = function(msg) {
   if (settings.dev) {

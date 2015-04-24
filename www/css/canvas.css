@@ -1,0 +1,55 @@
+#canvas {
+    position: relative;
+    margin: 0 auto;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    z-index: 5;
+}
+#counter {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    font-size: 150%;
+    z-index: 0;
+}
+#menu {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    font-size: 150%;
+    z-index: 10;
+}
+#pause {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    padding: 6px 10px;
+    font-size: 150%;
+    z-index: 10;
+}
+#pause .fa-pause,
+.game-pause #pause .fa-play {
+    display: none;
+}
+.game-pause #pause .fa-pause { display: block }
+.point {
+    background-color: blue;
+    position: absolute;
+}
+
+/* dev */
+#dev_canvas {
+    position: absolute;
+    top: 0;
+    z-index: 0;
+}
+.map-cell {
+    position: absolute;
+    text-align: center;
+    color: #EAEAEA;
+    font-size: 50%;
+    z-index: 0;
+}

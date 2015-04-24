@@ -1,5 +1,6 @@
 'use strict';
 
+import {settings} from 'settings';
 import {SnakePiece} from 'snake-piece';
 import * as $ from 'jquery';
 import * as _ from 'underscore';
@@ -7,27 +8,30 @@ import * as PF from 'pathfinding';
 import * as Reflux from 'reflux';
 import {log} from 'logger';
 
+var defaultsSnakeOptions = {
+  inmove: true,
+  length: 5,
+  direction: 'top',
+  trapped: false
+};
+var defaultSnakePosition  = {
+  left: 10,
+  top: 5
+};
+
 export class Snake {
   constructor(world, options) {
     options = options || {};
-    var defaults = {
-      inmove: true,
-      length: 5,
-      direction: 'right',
-      position: {
-        left: 0,
-        top: 0
-      }
-    };
-    _.extend(defaults, options);
-    _.extend(this, defaults);
+    _.extend(this, defaultsSnakeOptions, options);
+    this.position = {};
+    _.extend(this.position, defaultSnakePosition);
 
-    this.pieces = [];
     world.snake = this;
     world.actions.snakeCreated();
 
     this.actions = Reflux.createActions([
-      'lengthChanged'
+      'lengthChanged',
+      'trapped'
     ]);
 
     world.actions.snakeClamped.listen(() => {
@@ -41,11 +45,26 @@ export class Snake {
     this.targetGet(world);
   }
   draw(world) {
+    this.pieces = [];
     this.el = $('#snake');
     var i = 0, l = this.length;
     for (; i < l; i++) {
       this.pieceAdd(world, i);
     }
+
+    //if (settings.dev) {
+    //  _.each(this.pieces, (piece, index) => {
+    //    var top = 5 + index,
+    //      left = 10 - index;
+    //
+    //    piece.move({
+    //      top: top,
+    //      left: left,
+    //      _top: top * world.pixel,
+    //      _left: left * world.pixel
+    //    });
+    //  });
+    //}
   }
   targetGet(world) {
     var shadowPoints = world.shadowPointsGet(),
@@ -142,13 +161,19 @@ export class Snake {
   targetSet(target) {
     if (_.isObject(target) && !_.isUndefined(target.index) && target.point && target.path) {
       this.target = target;
-      this.logSet(target.path);
+      //this.logSet(target.path);
       return true;
     } else {
       return false;
     }
   }
-  targetReached(world) {
+  checkTargetReached() {
+    var position = this.position,
+      target = this.target.point;
+
+    return position.left === target.left && position.top === target.top;
+  }
+  targetReached(world, getNext) {
     if (this.target.index !== 'shadow_point') {
       world.pointRemove(this.target.index);
       this.length += 1;
@@ -157,7 +182,9 @@ export class Snake {
       this.actions.lengthChanged();
     }
     this.target = null;
-    this.targetGet(world);
+    if (getNext) {
+      this.targetGet(world);
+    }
   }
   move(world) {
     var path = this.target.path,
@@ -165,12 +192,9 @@ export class Snake {
         name: 'snake_move',
         frames: [],
         callback: () => {
-          var position = this.position,
-            target = this.target.point;
-
-          if (position.left === target.left && position.top === target.top) {
+          if (this.checkTargetReached()) {
             log('Stop moved');
-            this.targetReached(world);
+            this.targetReached(world, true);
           } else {
             this.trappedSay();
           }
@@ -182,13 +206,13 @@ export class Snake {
         var chainPoint, chainPrevPoint,
           nextPoint = world.map[pathPoint[1]][pathPoint[0]];
 
-        this.position = nextPoint;
-        _.each(this.pieces, piece => {
-          chainPoint = piece.position;
+        _.extend(this.position, nextPoint);
+        _.each(this.pieces, (piece, pieceIndex) => {
+          chainPoint = _.clone(piece.position);
           if (piece.head) {
             piece.move(nextPoint);
           } else {
-            piece.move(chainPrevPoint);
+            piece.move(chainPrevPoint, this.pieces[pieceIndex - 1], pieceIndex === this.pieces.length - 1);
           }
           chainPrevPoint = chainPoint;
         });
@@ -198,9 +222,12 @@ export class Snake {
     log('Start moved');
   }
   moveInterrupt(world) {
-    this.target = null;
     world.animationRemove('snake_move');
     log('Moved Interrupt');
+    if (this.checkTargetReached()) {
+      this.targetReached(world, false);
+    }
+    this.target = null;
   }
   getPath(world, curPosition, target, nextSnakePosition) {
     curPosition = curPosition || this.position;
@@ -250,16 +277,20 @@ export class Snake {
     });
     var grid = new PF.Grid(matrix),
       finder = new PF.BestFirstFinder({
-        allowDiagonal: true
-      });
+        allowDiagonal: settings.allowDiagonalPath
+      }),
+      path = finder.findPath(
+        curPosition.left,
+        curPosition.top,
+        target.point.left,
+        target.point.top,
+        grid
+      );
 
-    return finder.findPath(
-      curPosition.left,
-      curPosition.top,
-      target.point.left,
-      target.point.top,
-      grid
-    );
+    if (path.length > 0) {
+      path.shift();
+    }
+    return path;
   }
   setDirection() {
     var length = this.pieces.length,
@@ -302,8 +333,9 @@ export class Snake {
   }
   trappedSay() {
     this.trapped = true;
+    this.actions.trapped();
     this.say('I am trapped');
-    this.logList();
+    //this.logList();
   }
   say(words) {
     this.pieces[0].say(words);

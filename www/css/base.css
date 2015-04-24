@@ -1,0 +1,19 @@
+html, body, form, ul, img, menu {
+    margin: 0;
+    padding: 0;
+}
+html {
+    width: 100%;
+    height: 100%;
+    font-size: 16px
+}
+body {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background-color: #f2f2f2;
+    color: #333;
+    font-family: Verdana, Arial;
+}
+

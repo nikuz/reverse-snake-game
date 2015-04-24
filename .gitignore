@@ -1,2 +1,3 @@
-bower_components/*
-build/*
+www/bower_components/*
+www/build/*
+www/js/*

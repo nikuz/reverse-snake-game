@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1">
+
+<link rel="stylesheet" href="css/font-awesome.min.css" />
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/canvas.css" />
+<link rel="stylesheet" href="css/snake.css" />
+<body>
+    <div id="canvas">
+        <div id="snake"></div>
+    </div>
+    <div id="dev_canvas"></div>
+    <div id="counter"></div>
+    <div id="pause">
+        <i class="fa fa-play"></i>
+        <i class="fa fa-pause"></i>
+    </div>
+    <div id="menu">
+        <i class="fa fa-bars"></i>
+    </div>
+
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript">
+        var require = {
+            baseUrl: 'js',
+            urlArgs: 'bust=' + new Date().getTime(), // TODO: delete for production
+            paths: {
+                jquery: '../bower_components/jquery/dist/jquery',
+                reflux: '../bower_components/reflux/dist/reflux',
+                underscore: '../bower_components/underscore/underscore',
+                pathfinding: '../bower_components/pathfinding/pathfinding-browser'
+            }
+        }
+    </script>
+    <script src="bower_components/requirejs/require.js" data-main="main"></script>
+</body>

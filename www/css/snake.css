@@ -1,0 +1,71 @@
+#snake div {
+    position: absolute;
+    background: transparent url(../img/snake_body.svg) 0 0 no-repeat;
+    background-size: 100% 100%;
+}
+#snake div.top,
+#snake div.bottom {
+    transform: rotate(-90deg);
+}
+#snake div.cr_top_right,
+#snake div.cr_left_bottom {
+    transform: none;
+    background-image: url(../img/snake_cr_tr.svg);
+}
+#snake div.cr_right_bottom,
+#snake div.cr_top_left {
+    transform: none;
+    background-image: url(../img/snake_cr_rb.svg);
+}
+#snake div.cr_bottom_right,
+#snake div.cr_left_top {
+    transform: none;
+    background-image: url(../img/snake_cr_br.svg);
+}
+#snake div.cr_right_top,
+#snake div.cr_bottom_left {
+    transform: none;
+    background-image: url(../img/snake_cr_rt.svg);
+}
+/* head */
+#snake div.right:first-child,
+#snake div.top:first-child {
+    background-image: url(../img/snake_head_r.svg);
+}
+#snake div.top:first-child {
+    transform: rotate(-90deg);
+}
+#snake div.left:first-child,
+#snake div.bottom:first-child {
+    background-image: url(../img/snake_head_l.svg);
+}
+#snake div.bottom:first-child {
+    transform: rotate(-90deg);
+}
+/* tail */
+#snake div.right:last-child,
+#snake div.top:last-child {
+    background-image: url(../img/snake_tail_r.svg);
+}
+#snake div.top:last-child {
+    transform: rotate(-90deg);
+}
+#snake div.left:last-child,
+#snake div.bottom:last-child {
+    background-image: url(../img/snake_tail_l.svg);
+}
+#snake div.bottom:last-child {
+    transform: rotate(-90deg);
+}
+
+
+.snake-tooltip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 3px 5px;
+    border-radius: 3px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, .6);
+    background-color: #FFF;
+    z-index: 20;
+}

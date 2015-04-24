@@ -1,6 +1,6 @@
 'use strict';
 
-import * as settings from 'settings';
+import {settings} from 'settings';
 import * as $ from 'jquery';
 import * as _ from 'underscore';
 import * as Reflux from 'reflux';
@@ -16,17 +16,30 @@ export class World {
     this.points = [];
     this.pointsLength = 0;
     this.animationTasks = {};
+    this.animationSlow = true;
+    this.isPlay = true;
 
     this.actions = Reflux.createActions([
       'pointCreated',
       'snakeCreated',
-      'snakeClamped'
+      'snakeClamped',
+      'pause',
+      'play'
     ]);
     this.actions.snakeCreated.listen(() => {
       this.counterUpdate();
       this.snake.actions.lengthChanged.listen(() => {
         this.counterUpdate();
       });
+      this.snake.actions.trapped.listen(() => {
+        this.gameOver();
+      });
+    });
+    this.actions.pause.listen(() => {
+      this.pause();
+    });
+    this.actions.play.listen(() => {
+      this.play();
     });
 
     this.draw();
@@ -34,7 +47,7 @@ export class World {
   sizeGenerate(opts) {
     opts = opts || this.opts;
     var size = {},
-      pixelPercent = opts.pixelPercent || 2, // pixel will be 2% of biggest screen size
+      pixelPercent = opts.pixelPercent || 3, // pixel will be 3% of biggest screen size
       ww = opts.width || window.innerWidth,
       wh = opts.height || window.innerHeight;
 
@@ -54,24 +67,43 @@ export class World {
       width: this._width,
       height: this._height
     });
-    this.canvas.on('click', e => {
-      this.pointAdd(e);
+    this.canvas.on('touchstart', e => {
+      this.pointAdd(e.originalEvent);
+    });
+    $('#pause').on('click', () => {
+      if (this.isPlay) {
+        this.actions.pause();
+      } else {
+        this.actions.play();
+      }
     });
 
     if (settings.dev) {
-      let mapCells = '';
-      _.each(this.map, (string, stringIndex) => {
-        _.each(string, (point, pointIndex) => {
-          mapCells += `<div class="map-cell" style="left:${point._left}px; top:${point._top}px; width:${this.pixel}px; height:${this.pixel}px">
-                          ${stringIndex}:${pointIndex}
-                       </div>`;
+      this.canvas.on('click', () => {
+        this.animationStop();
+      });
+      let mapCells = [],
+        devCanvas;
+
+      _.each(this.map, string => {
+        _.each(string, point => {
+          let ceil = $('<div class="map-cell fa fa-circle"></div>'),
+            style = {
+              left: point._left,
+              top: point._top,
+              width: this.pixel,
+              height: this.pixel,
+              'line-height': this.pixel + 'px'
+            };
+          ceil.css(style);
+          mapCells.push(ceil);
         });
       });
-      this.devCanvas = $('#dev_canvas');
-      this.devCanvas.css({
+      devCanvas = $('#dev_canvas');
+      devCanvas.css({
         left: $(this.canvas).offset().left
-      });
-      $(this.devCanvas).append(mapCells);
+      }).append(mapCells);
+
       $(this.canvas).css({
         opacity: .5
       });
@@ -113,12 +145,14 @@ export class World {
     if (target.id.indexOf('piece_') === 0) {
       this.actions.snakeClamped();
       return false;
-    } else if (this.snake.trapped || target.id !== 'canvas') {
+    } else if (this.points.length > settings.pointsLimit || this.snake.trapped || target.id !== 'canvas' || !this.isPlay) {
       return false;
     } else {
+      this.actions.pointCreated();
       this.pointsLength += 1;
-      var y = parseInt(e.offsetY / opts.pixel, 10),
-        x = parseInt(e.offsetX / opts.pixel, 10);
+      var touchEvent = e.targetTouches[0],
+        y = parseInt(touchEvent.clientY / opts.pixel, 10),
+        x = parseInt(touchEvent.clientX / opts.pixel, 10);
 
       x = x < opts.width ? x : opts.width - 1;
       y = y < opts.height ? y : opts.height - 1;
@@ -152,7 +186,7 @@ export class World {
 
     this.points.push(point);
     this.pointDraw(point);
-    this.actions.pointCreated();
+    this.animationSlow = false;
     log('Point created');
     return point;
   }
@@ -169,6 +203,9 @@ export class World {
     if (this.points[pointIndex]) {
       var point = this.points.splice(pointIndex, 1)[0];
       $('#' + point.id).remove();
+      if (!this.points.length) {
+        this.animationSlow = true;
+      }
       return true;
     } else {
       return false;
@@ -184,11 +221,29 @@ export class World {
       map = opts.map,
       w = opts.width - 1,
       h = opts.height - 1,
+      wc = 9,
+      hc = 5,
       points = [
         map[0][0],
+        map[2][3],
+        map[0][wc],
+        map[0][w - wc],
+        map[2][w - 3],
         map[0][w],
+        map[3][w - 2],
+        map[hc][w],
+        map[h - hc][w],
+        map[h - 3][w - 3],
         map[h][w],
-        map[h][0]
+        map[h - 2][w - 3],
+        map[h][w - wc],
+        map[h][wc],
+        map[h - 2][3],
+        map[h][0],
+        map[h - 3][2],
+        map[h - hc][0],
+        map[hc][0],
+        map[3][2]
       ];
 
     _.each(points, point => {
@@ -210,10 +265,8 @@ export class World {
     return points;
   }
   animationStart() {
-    if (_.isEmpty(this.animationTasks)) {
-      log('Empty animations');
-      this.animationStop();
-      return;
+    if (_.isEmpty(this.animationTasks) || !this.isPlay) {
+      return this.animationStop();
     }
 
     _.each(this.animationTasks, task => {
@@ -226,23 +279,35 @@ export class World {
       }
     });
 
-    if (settings.dev) {
-      this.animation = setTimeout(() => {
+    if (this.animationSlow || settings.dev) {
+      this.animationTime = setTimeout(() => {
         this.animationStart();
-      }, settings.animationSpeed);
+      }, settings.slowAnimationSpeed || settings.devAnimationSpeed);
+      this.animation = true;
     } else {
-      this.animation = requestAnimationFrame(() => {
+      this.animationFrame = requestAnimationFrame(() => {
         this.animationStart();
       });
+      this.animation = true;
     }
   }
   animationStop() {
     if (this.animation) {
-      log('Clear animations frame');
-      if (settings.dev) {
-        cancelAnimationFrame(this.animation);
+      if (this.isPlay) {
+        log('Empty animations');
+        log('Clear animations frame');
+        this.animation = false;
       } else {
-        clearTimeout(this.animation);
+        log('Paused');
+      }
+      if (this.animationTime) {
+        clearTimeout(this.animationTime);
+      }
+      if (this.animationFrame) {
+        cancelAnimationFrame(this.animationFrame);
+      }
+      if (settings.dev) {
+        this.animationTasks = {};
       }
     }
   }
@@ -273,6 +338,19 @@ export class World {
       }
     }
     return !errors;
+  }
+  pause() {
+    this.isPlay = false;
+    $('body').addClass('game-pause');
+  }
+  play() {
+    this.isPlay = true;
+    this.animationStart();
+    $('body').removeClass('game-pause');
+  }
+  gameOver() {
+    this.animationStop();
+    $('body').addClass('game-over');
   }
   counterUpdate() {
     $('#counter').text(this.snake.length);
