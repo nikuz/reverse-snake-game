@@ -23,11 +23,13 @@
                     <input type="submit" id="hs-submit" value="Add" />
                     <div class="hs-name-error">Wrong name characters</div>
                 </form>
-                <ul id="hs-list">
-                    <li class="hs-loading">
-                        <i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
-                    </li>
-                </ul>
+                <div id="hs-refresh">
+                    <i class="fa fa-refresh"></i> Refresh
+                </div>
+                <div class="hs-loading">
+                    <i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
+                </div>
+                <ul id="hs-list"></ul>
                 <div id="hs-errors">
                     <span id="connection-error">Can't get remote scores. Connection error.</span>
                 </div>
@@ -90,8 +92,11 @@
     </script>
     <script src="bower_components/requirejs/require.js" data-main="world"></script>
     <script type="text/template" id="score_tpl">
-        <li id="{{id}}" class="{{cl}}">
-            <span class="hs-score">{{score}}</span>
+        <li id="{{id}}" class="hsl-item {{cl}}">
+            <i class="fa fa-spinner fa-pulse fa-fw"></i>
+            <span class="hs-score">
+                {{score}}
+            </span>
             <span class="hs-name">{{name}}</span>
         </li>
     </script>

@@ -5,8 +5,12 @@ import * as $mobile from 'jquerymobile';
 import * as _ from 'underscore';
 import * as Reflux from 'reflux';
 
-const scoresHost = 'http://192.168.174.130';
-//const scoresHost = 'http://91.239.26.79';
+var scoresHost;
+if (window.device) {
+  scoresHost = 'http://91.239.26.79';
+} else {
+  scoresHost = 'http://192.168.174.130';
+}
 const APIKEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9';
 const scoreCache = 1; // one hour
 // localStorage tokens
@@ -32,9 +36,9 @@ export class HS {
     menu.actions.hsTaped.listen(isAddNew => {
       this.open(world);
       this.draw(world);
-      //if (isAddNew) {
+      if (isAddNew) {
         this.scoresAdd(null, world.score);
-      //}
+      }
     });
     this.actions.nameReceived.listen((name, isUpdate) => {
       this.scoresAdd(name, world.score, isUpdate);
@@ -42,9 +46,6 @@ export class HS {
     this.actions.authTokenReceived.listen(() => {
       this.scoresAdd(null, world.score);
     });
-    localStorage.clear(); // TODO: should to be deleted
-    //this.draw(world); // TODO: should to be deleted
-    //this.scoresAdd(null, world.score); // TODO: should to be deleted
   }
   draw(world) {
     $('#back_scores').on('tap', () => {
@@ -52,9 +53,7 @@ export class HS {
     });
     this.el = $('#high_scores');
     this.listEl = $('#hs-list');
-    //setTimeout(() => {
-      this.scoresGet();
-    //}, 1000);
+    this.scoresGet();
 
     this.actions.scoresReceived.listen(scores => {
       var listCont = '',
@@ -65,6 +64,10 @@ export class HS {
       });
       this.listEl.html(listCont);
       this.drawed = true;
+    });
+
+    $('#hs-refresh').on('tap', () => {
+      this.scoresGet(true);
     });
   }
   listItemGet(name, score, me) {
@@ -82,9 +85,14 @@ export class HS {
       cl: me ? 'me' : ''
     });
   }
-  authTokenGet() {
-    var loadCl = 'hs-upload',
-      device = window.device || {};
+  /*authTokenGet() {
+    var loadCl = 'hs-upload';
+    var device = window.device || {
+        model: 'snake_model',
+        platform: 'snake_platform',
+        uuid: 'snake_uuid',
+        version: 'snake_version'
+      };
 
     $.ajax({
       url: this.urlGet('/auth'),
@@ -99,8 +107,12 @@ export class HS {
         this.el.addClass(loadCl);
       },
       success: data => {
-        console.log(data);
-        //this.actions.authTokenReceived();
+        if (data.error) {
+          console.log(data.error);
+        } else {
+          localStorage.setItem(hsAuthToken, data.result.token);
+          this.actions.authTokenReceived();
+        }
       },
       error: err => {
         console.log(err);
@@ -109,14 +121,16 @@ export class HS {
         this.el.removeClass(loadCl);
       }
     });
-  }
-  scoresGet() {
-    var localHs = this.scoresGetLocal();
-    if (localHs && localHs.valid) {
-      if (!this.drawed) {
-        this.actions.scoresReceived(localHs.data);
+  }*/
+  scoresGet(force) {
+    if (!force) {
+      var localHs = this.scoresGetLocal();
+      if (localHs && localHs.valid) {
+        if (!this.drawed) {
+          this.actions.scoresReceived(localHs.data);
+        }
+        return;
       }
-      return;
     }
 
     var loadCl = 'hs-load',
@@ -159,17 +173,22 @@ export class HS {
     });
   }
   scoresAdd(name, score, isUpdate) {
-    var authToken = localStorage.getItem(hsAuthToken);
+    /*var authToken = localStorage.getItem(hsAuthToken);
     if (!authToken) {
       return this.authTokenGet();
-    }
+    }*/
     if (!name) {
       return this.nameGet();
     }
     var prevScore = localStorage.getItem(prevScoreToken),
       uploadCl = 'hs-upload';
 
-    //score = 10; // TODO: should to be deleted
+    if (isUpdate && prevScore !== null && prevScore < score) {
+      isUpdate = confirm('New scores bigger than previous. Are you sure that want to update scores?');
+      if (!isUpdate) {
+        return;
+      }
+    }
     $.ajax({
       url: this.urlGet('/scores'),
       method: 'post',
@@ -194,7 +213,7 @@ export class HS {
             name: name,
             score: score
           }, !isUpdate, isUpdate);
-          this.scoresListUpdate(name, score, isUpdate);
+          this.scoresListUpdate(name);
         }
       },
       error: err => {
@@ -205,15 +224,10 @@ export class HS {
       }
     });
   }
-  scoresListUpdate(name, score, isUpdate) {
-    if (!isUpdate) {
-      this.actions.scoresReceived(this.scoresGetLocal().data);
-    }
+  scoresListUpdate(name) {
+    this.actions.scoresReceived(this.scoresGetLocal().data);
     setTimeout(() => {
       var scoreItem = $('#hs_i_' + name);
-      if (isUpdate) {
-        $('.hs-score', scoreItem).text(score);
-      }
       this.el.animate({scrollTop: scoreItem.offset().top}, '500', 'swing');
     }, 100);
   }

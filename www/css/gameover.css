@@ -1,7 +1,9 @@
 #gameover_ovl {
+    -webkit-transform: translateX(100%);
     transform: translateX(100%)
 }
 .game-over #gameover_ovl {
+    -webkit-transform: translateX(0);
     transform: translateX(0)
 }
 #go_counter {

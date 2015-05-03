@@ -1,7 +1,9 @@
 #settings_ovl {
+    -webkit-transform: translateX(100%);
     transform: translateX(100%)
 }
 .settings-shown #settings_ovl {
+    -webkit-transform: translateX(0);
     transform: translateX(0)
 }
 #back_settings {

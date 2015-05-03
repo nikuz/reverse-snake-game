@@ -9,12 +9,8 @@ import {Settings} from 'settings';
 import {Canvas} from 'canvas';
 import {Snake} from 'snake';
 
-var isReady;
-
 class World {
   constructor() {
-    isReady = true;
-
     this.el = $('body');
     this.gameState = 'play';
     this.actions = Reflux.createActions([
@@ -114,10 +110,14 @@ class World {
     this.el.removeClass('game-started');
   }
 }
-
-$(document).on('deviceready', function(){
-  !isReady && new World();
-});
-$(document).ready(function(){
-  !isReady && new World();
-});
+if (window.device) {
+  document.addEventListener('deviceready', () => {
+    $(document).ready(() => {
+      new World();
+    });
+  });
+} else {
+  $(document).ready(() => {
+    new World();
+  });
+}

@@ -1,7 +1,9 @@
 #hs_ovl {
+    -webkit-transform: translateX(-100%);
     transform: translateX(-100%)
 }
 .high-scores-shown #hs_ovl {
+    -webkit-transform: translateX(0);
     transform: translateX(0)
 }
 #back_scores {
@@ -33,31 +35,32 @@
 #hs-list {
     list-style: decimal inside;
 }
-#hs-list li {
+.hsl-item {
     position: relative;
     margin-bottom: .4em;
     padding: 0 10px 0 5px;
     border-bottom: 1px dotted #333;
 }
-#hs-list .hs-loading {
-    border: none;
-    margin-top: 2em;
-    text-align: center;
-    list-style: none;
+.hs-loading {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: -1em 0 0 -1em;
 }
 .hs-index {
     display: inline-block;
     width: 2em;
     color: #FFF;
 }
-.hs-score {
+.hs-score,
+.hsl-item .fa {
     float: right;
 }
 .hs-name {
     display: inline-block;
     text-transform: capitalize;
 }
-#hs-list .me {
+.hsl-item.me {
     font-weight: bold;
 }
 .hs-name-error {
@@ -69,8 +72,11 @@
 #hs-new-form,
 .hs-name-error,
 #connection-error,
-#hs-list .hs-loading { display: none }
+.hs-loading,
+.hsl-item .fa,
+.hs-upload .me .hs-score { display: none }
 #hs-new-form.hs-add-mode,
 .hs-add-error .hs-name-error,
 .get-connection-error #connection-error,
-.hs-load #hs-list .hs-loading { display: block }
+.hs-load .hs-loading,
+.hs-upload .me .fa { display: block }

@@ -5,25 +5,30 @@
 }
 #snake div.top,
 #snake div.bottom {
+    -webkit-transform: rotate(-90deg);
     transform: rotate(-90deg);
 }
 #snake div.cr_top_right,
 #snake div.cr_left_bottom {
+    -webkit-transform: none;
     transform: none;
     background-image: url(../img/snake_cr_tr.svg);
 }
 #snake div.cr_right_bottom,
 #snake div.cr_top_left {
+    -webkit-transform: none;
     transform: none;
     background-image: url(../img/snake_cr_rb.svg);
 }
 #snake div.cr_bottom_right,
 #snake div.cr_left_top {
+    -webkit-transform: none;
     transform: none;
     background-image: url(../img/snake_cr_br.svg);
 }
 #snake div.cr_right_top,
 #snake div.cr_bottom_left {
+    -webkit-transform: none;
     transform: none;
     background-image: url(../img/snake_cr_rt.svg);
 }
@@ -33,6 +38,7 @@
     background-image: url(../img/snake_head_r.svg);
 }
 #snake div.top:first-child {
+    -webkit-transform: rotate(-90deg);
     transform: rotate(-90deg);
 }
 #snake div.left:first-child,
@@ -40,6 +46,7 @@
     background-image: url(../img/snake_head_l.svg);
 }
 #snake div.bottom:first-child {
+    -webkit-transform: rotate(-90deg);
     transform: rotate(-90deg);
 }
 /* tail */
@@ -48,6 +55,7 @@
     background-image: url(../img/snake_tail_r.svg);
 }
 #snake div.top:last-child {
+    -webkit-transform: rotate(-90deg);
     transform: rotate(-90deg);
 }
 #snake div.left:last-child,
@@ -55,6 +63,7 @@
     background-image: url(../img/snake_tail_l.svg);
 }
 #snake div.bottom:last-child {
+    -webkit-transform: rotate(-90deg);
     transform: rotate(-90deg);
 }
 

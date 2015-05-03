@@ -41,7 +41,7 @@ var responseSend = function(res, err, data) {
 app.get('/', function(req, res) {
   res.redirect(301, '/scores');
 });
-app.post('/auth', function(req, res) {
+app.post('/auth', tokenCheck, urlencodeParser, function(req, res) {
   var workflow = new(require('events').EventEmitter)(),
     body = req.body || {},
     model = _.escape(body.model),
@@ -64,20 +64,17 @@ app.post('/auth', function(req, res) {
       errors.push('version is required');
     }
     if (errors.length) {
-      console.log(errors);
       responseSend(res, errors);
     } else {
-      workflow.emit('checkUserName');
+      workflow.emit('generateToken');
     }
   });
 
-  workflow.on('saveScore', function() {
-    console.log(model);
-    console.log(platform);
-    console.log(uuid);
-    console.log(version);
+  workflow.on('generateToken', function() {
+    var token = crypto.createHash('sha1');
+    token = token.update(model + platform + uuid + version).digest('hex');
     responseSend(res, null, {
-      token: true
+      token: token
     });
   });
 
