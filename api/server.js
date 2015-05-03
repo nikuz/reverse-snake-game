@@ -1,6 +1,7 @@
 'use strict';
 
-var express = require('express'),
+var crypto = require('crypto'),
+  express = require('express'),
   redis = require('redis'),
   db = redis.createClient(),
   app = express(),
@@ -30,7 +31,7 @@ var tokenCheck = function(req, res, next) {
 var responseSend = function(res, err, data) {
   var result = {};
   if (err) {
-    result.error = err.toString();
+    result.error = err;
   } else {
     result.result = data;
   }
@@ -38,12 +39,54 @@ var responseSend = function(res, err, data) {
 };
 
 app.get('/', function(req, res) {
-  responseSend(res, null, 'See snake scores here: /scores');
+  res.redirect(301, '/scores');
+});
+app.post('/auth', function(req, res) {
+  var workflow = new(require('events').EventEmitter)(),
+    body = req.body || {},
+    model = _.escape(body.model),
+    platform = _.escape(body.platform),
+    uuid = _.escape(body.uuid),
+    version = _.escape(body.version);
+
+  workflow.on('validateParams', function() {
+    var errors = [];
+    if (!model) {
+      errors.push('model is required');
+    }
+    if (!platform) {
+      errors.push('platform is required');
+    }
+    if (!uuid) {
+      errors.push('uuid is required');
+    }
+    if (!version) {
+      errors.push('version is required');
+    }
+    if (errors.length) {
+      console.log(errors);
+      responseSend(res, errors);
+    } else {
+      workflow.emit('checkUserName');
+    }
+  });
+
+  workflow.on('saveScore', function() {
+    console.log(model);
+    console.log(platform);
+    console.log(uuid);
+    console.log(version);
+    responseSend(res, null, {
+      token: true
+    });
+  });
+
+  workflow.emit('validateParams');
 });
 app.get('/scores', tokenCheck, function(req, res) {
   db.zrangebyscore(dbPrefix + 'z:scores', '-inf', '+inf', 'withscores', 'LIMIT', '0', '50', function(err, response) {
     if (err) {
-      responseSend(res, err);
+      responseSend(res, err.toString());
     } else {
       var result = [],
         i = 0, l = response.length;
@@ -56,7 +99,7 @@ app.get('/scores', tokenCheck, function(req, res) {
           });
         }
       }
-      responseSend(res, err, result);
+      responseSend(res, null, result);
     }
   });
 });
@@ -85,7 +128,7 @@ app.post('/scores', tokenCheck, urlencodeParser, function(req, res) {
   workflow.on('checkUserName', function() {
     db.zscore(dbPrefix + 'z:scores', name, function(err, response) {
       if (err) {
-        responseSend(res, err);
+        responseSend(res, err.toString());
       } else {
         if (response === null || prevScore == response) {
           workflow.emit('saveScore');
@@ -97,7 +140,7 @@ app.post('/scores', tokenCheck, urlencodeParser, function(req, res) {
   });
 
   workflow.on('saveScore', function() {
-    db.zadd(dbPrefix + 'z:scores', score, name, function(err) {
+    db.zadd(dbPrefix + 'z:scores', score, name, function() {
       responseSend(res, null, {
         success: true
       });

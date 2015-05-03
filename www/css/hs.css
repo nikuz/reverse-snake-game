@@ -61,9 +61,16 @@
     font-weight: bold;
 }
 .hs-name-error {
-    color: #FF0000;
+    color: #F00;
+}
+#hs-errors {
+    color: #F00;
 }
 #hs-new-form,
-.hs-name-error { display: none }
+.hs-name-error,
+#connection-error,
+#hs-list .hs-loading { display: none }
 #hs-new-form.hs-add-mode,
-.hs-add-error .hs-name-error { display: block }
+.hs-add-error .hs-name-error,
+.get-connection-error #connection-error,
+.hs-load #hs-list .hs-loading { display: block }

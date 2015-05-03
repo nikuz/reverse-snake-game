@@ -6,10 +6,15 @@ import * as _ from 'underscore';
 import * as Reflux from 'reflux';
 
 const scoresHost = 'http://192.168.174.130';
+//const scoresHost = 'http://91.239.26.79';
 const APIKEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9';
 const scoreCache = 1; // one hour
+// localStorage tokens
+const hsToken = 'hs';
+const hsAuthToken = 'hs:auth';
 const prevScoreToken = 'hs:prev';
 const nameToken = 'hs:name';
+//
 const listIdPrefix = 'hs_i_';
 const cssEscapeReg = new RegExp('(!|"|#|\\$|%|&|\'|\\(|\\)|\\*|\\+|,|-|\\.|/|:|;|<|=|>|\\?|@|\\[|\\]|\\^|`|\\{|\\|\\}|\\s)', 'g');
 
@@ -21,18 +26,23 @@ export class HS {
   constructor(world, menu) {
     this.actions = Reflux.createActions([
       'scoresReceived',
-      'nameReceived'
+      'nameReceived',
+      'authTokenReceived'
     ]);
     menu.actions.hsTaped.listen(isAddNew => {
       this.open(world);
       this.draw(world);
-      if (isAddNew) {
+      //if (isAddNew) {
         this.scoresAdd(null, world.score);
-      }
+      //}
     });
     this.actions.nameReceived.listen((name, isUpdate) => {
       this.scoresAdd(name, world.score, isUpdate);
     });
+    this.actions.authTokenReceived.listen(() => {
+      this.scoresAdd(null, world.score);
+    });
+    localStorage.clear(); // TODO: should to be deleted
     //this.draw(world); // TODO: should to be deleted
     //this.scoresAdd(null, world.score); // TODO: should to be deleted
   }
@@ -54,6 +64,7 @@ export class HS {
         listCont += this.listItemGet(item.name, item.score, item.name === curName);
       });
       this.listEl.html(listCont);
+      this.drawed = true;
     });
   }
   listItemGet(name, score, me) {
@@ -71,60 +82,127 @@ export class HS {
       cl: me ? 'me' : ''
     });
   }
+  authTokenGet() {
+    var loadCl = 'hs-upload',
+      device = window.device || {};
+
+    $.ajax({
+      url: this.urlGet('/auth'),
+      method: 'post',
+      data: {
+        model: device.model,
+        platform: device.platform,
+        uuid: device.uuid,
+        version: device.version
+      },
+      beforeSend: () => {
+        this.el.addClass(loadCl);
+      },
+      success: data => {
+        console.log(data);
+        //this.actions.authTokenReceived();
+      },
+      error: err => {
+        console.log(err);
+      },
+      complete: () => {
+        this.el.removeClass(loadCl);
+      }
+    });
+  }
   scoresGet() {
     var localHs = this.scoresGetLocal();
     if (localHs && localHs.valid) {
-      return this.actions.scoresReceived(localHs.data);
+      if (!this.drawed) {
+        this.actions.scoresReceived(localHs.data);
+      }
+      return;
     }
 
-    localHs = $.get(this.urlGet('/scores'));
-    localHs.then(data => {
-      if (data.error) {
-        console.log(data.error);
-      } else {
-        this.scoresSaveLocal({
-          data: data.result,
-          time: Date.now()
-        });
-        this.actions.scoresReceived(data.result);
+    var loadCl = 'hs-load',
+      connectionErrCl = 'get-connection-error';
+
+    $.ajax({
+      url: this.urlGet('/scores'),
+      cache: false,
+      beforeSend: () => {
+        this.el.addClass(loadCl);
+      },
+      success: data => {
+        this.el.removeClass(connectionErrCl);
+        if (data.error) {
+          console.log(data.error);
+        } else {
+          this.scoresSaveLocal({
+            data: data.result,
+            time: Date.now()
+          });
+          this.actions.scoresReceived(data.result);
+        }
+      },
+      error: err => {
+        if (localHs && localHs.time !== 0) {
+          this.actions.scoresReceived(localHs.data);
+        } else {
+          this.scoresSaveLocal({
+            data: {},
+            time: 0
+          });
+          if (err.status === 0) {
+            this.el.addClass(connectionErrCl);
+          }
+        }
+      },
+      complete: () => {
+        this.el.removeClass(loadCl);
       }
-    }, err => {
-      if (localHs) {
-        this.actions.scoresReceived(localHs.data);
-      } else {
-        this.actions.scoresGetError();
-      }
-      console.log(err);
     });
   }
   scoresAdd(name, score, isUpdate) {
+    var authToken = localStorage.getItem(hsAuthToken);
+    if (!authToken) {
+      return this.authTokenGet();
+    }
     if (!name) {
       return this.nameGet();
     }
-    var prevScore = localStorage.getItem(prevScoreToken);
+    var prevScore = localStorage.getItem(prevScoreToken),
+      uploadCl = 'hs-upload';
+
     //score = 10; // TODO: should to be deleted
-    $.post(this.urlGet('/scores'), {
-      name: name,
-      score: score,
-      prevScore: prevScore
-    }).then(data => {
-      if (data.error) {
-        console.log(data.error);
-        if (data.error === 'busy name') {
-          alert('This name is busy. Please try to write other name.');
-          localStorage.removeItem(nameToken);
-          this.scoresAdd(null, score);
+    $.ajax({
+      url: this.urlGet('/scores'),
+      method: 'post',
+      data: {
+        name: name,
+        score: score,
+        prevScore: prevScore
+      },
+      beforeSend: () => {
+        this.el.addClass(uploadCl);
+      },
+      success: data => {
+        if (data.error) {
+          if (data.error === 'busy name') {
+            alert('This name is busy. Please try to write other name.');
+            localStorage.removeItem(nameToken);
+            this.scoresAdd(null, score);
+          }
+        } else {
+          localStorage.setItem(prevScoreToken, score);
+          this.scoresSaveLocal({
+            name: name,
+            score: score
+          }, !isUpdate, isUpdate);
+          this.scoresListUpdate(name, score, isUpdate);
         }
-      } else {
-        localStorage.setItem(prevScoreToken, score);
-        this.scoresSaveLocal({
-          name: name,
-          score: score
-        }, !isUpdate, isUpdate);
-        this.scoresListUpdate(name, score, isUpdate);
+      },
+      error: err => {
+        console.log(err);
+      },
+      complete: () => {
+        this.el.removeClass(uploadCl);
       }
-    }, err => {
-      console.log(err);
     });
   }
   scoresListUpdate(name, score, isUpdate) {
@@ -140,7 +218,7 @@ export class HS {
     }, 100);
   }
   scoresGetLocal() {
-    var localHs = localStorage.getItem('hs');
+    var localHs = localStorage.getItem(hsToken);
     if (localHs) {
       localHs = JSON.parse(localHs);
       localHs.valid = true;
@@ -168,7 +246,7 @@ export class HS {
         return parseInt(item.score, 10);
       });
     }
-    localStorage.setItem('hs', JSON.stringify(localHs));
+    localStorage.setItem(hsToken, JSON.stringify(localHs));
   }
   nameGet() {
     var name = localStorage.getItem(nameToken);
