@@ -1,9 +1,9 @@
 "use strict";
 
-import {settings} from 'settings';
+import {config} from 'config';
 
 export var log = function(msg) {
-  if (settings.dev) {
+  if (config.dev) {
     console.log(msg);
   }
 };

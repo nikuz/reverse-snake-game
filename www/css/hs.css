@@ -1,0 +1,69 @@
+#hs_ovl {
+    transform: translateX(-100%)
+}
+.high-scores-shown #hs_ovl {
+    transform: translateX(0)
+}
+#back_scores {
+    position: absolute;
+    right: 15px;
+    top: 20px;
+    height: 1.5em;
+    width: 1.5em;
+    color: #FFF;
+    text-shadow: 1px 1px 1px #000;
+    line-height: 150%;
+    font-size: 200%;
+}
+
+#high_scores {
+    position: absolute;
+    left: 50%;
+    top: 5em;
+    bottom: 0;
+    width: 70%;
+    min-height: 1em;
+    margin: 0 0 0 -35%;
+    padding: .5em;
+    overflow: auto;
+    background-color: rgba(255, 255, 255, .5);
+    text-align: left;
+    color: #000;
+}
+#hs-list {
+    list-style: decimal inside;
+}
+#hs-list li {
+    position: relative;
+    margin-bottom: .4em;
+    padding: 0 10px 0 5px;
+    border-bottom: 1px dotted #333;
+}
+#hs-list .hs-loading {
+    border: none;
+    margin-top: 2em;
+    text-align: center;
+    list-style: none;
+}
+.hs-index {
+    display: inline-block;
+    width: 2em;
+    color: #FFF;
+}
+.hs-score {
+    float: right;
+}
+.hs-name {
+    display: inline-block;
+    text-transform: capitalize;
+}
+#hs-list .me {
+    font-weight: bold;
+}
+.hs-name-error {
+    color: #FF0000;
+}
+#hs-new-form,
+.hs-name-error { display: none }
+#hs-new-form.hs-add-mode,
+.hs-add-error .hs-name-error { display: block }

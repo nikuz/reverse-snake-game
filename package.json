@@ -14,11 +14,12 @@
   "private": false,
   "dependencies": {
     "babel": "latest",
-    "grunt": "latest",
     "bower": "latest",
     "bower-installer": "latest",
-    "karma": "latest",
-    "jasmine": "latest"
+    "express": "^4.12.3",
+    "grunt": "latest",
+    "jasmine": "latest",
+    "karma": "latest"
   },
   "bundleDependencies": []
 }

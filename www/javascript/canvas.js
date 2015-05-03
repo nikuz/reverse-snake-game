@@ -1,45 +1,43 @@
 'use strict';
 
-import {settings} from 'settings';
+import {config} from 'config';
 import * as $ from 'jquery';
 import * as _ from 'underscore';
 import * as Reflux from 'reflux';
 import {log} from 'logger';
 
 export class Canvas {
-  constructor(options) {
-    this.opts = options || {};
-
+  constructor(world) {
+    this.opts = {};
     this.sizeGenerate();
     this.mapGenerate();
     this.shadowPointsGenerate();
-    this.points = [];
-    this.pointsLength = 0;
+    this.pointsInit();
     this.animationTasks = {};
     this.animationSlow = true;
     this.isPlay = true;
 
     this.actions = Reflux.createActions([
       'pointCreated',
-      'snakeCreated',
       'snakeClamped',
-      'pause',
-      'play'
+      'snakeCreated'
     ]);
+    world.actions.pause.listen(() => {
+      this.pause();
+    });
+    world.actions.play.listen(() => {
+      this.play();
+    });
+    world.actions.gameover.listen(() => {
+      this.animationStop();
+      this.counterUpdate('#go_counter');
+      world.score = this.snake.length;
+    });
     this.actions.snakeCreated.listen(() => {
       this.counterUpdate();
       this.snake.actions.lengthChanged.listen(() => {
         this.counterUpdate();
       });
-      this.snake.actions.trapped.listen(() => {
-        this.gameOver();
-      });
-    });
-    this.actions.pause.listen(() => {
-      this.pause();
-    });
-    this.actions.play.listen(() => {
-      this.play();
     });
 
     this.draw();
@@ -69,15 +67,8 @@ export class Canvas {
     }).on('touchstart', e => {
       this.pointAdd(e.originalEvent);
     });
-    $('#pause').on('click', () => {
-      if (this.isPlay) {
-        this.actions.pause();
-      } else {
-        this.actions.play();
-      }
-    });
 
-    if (settings.dev) {
+    if (config.dev) {
       this.el.on('click', () => {
         this.animationStop();
       });
@@ -134,6 +125,12 @@ export class Canvas {
     this.map = map;
     return map;
   }
+  pointsInit() {
+    this.pointsEl = $('#points');
+    this.pointsEl.html('');
+    this.points = [];
+    this.pointsLength = 0;
+  }
   pointAdd(e, opts) {
     opts = opts || {
       width: this.width,
@@ -144,7 +141,7 @@ export class Canvas {
     if (target.id.indexOf('piece_') === 0) {
       this.actions.snakeClamped();
       return false;
-    } else if (this.points.length > settings.pointsLimit || this.snake.trapped || target.id !== 'canvas' || !this.isPlay) {
+    } else if (this.points.length > config.pointsLimit || this.snake.trapped || target.id !== 'canvas' || !this.isPlay) {
       return false;
     } else {
       this.actions.pointCreated();
@@ -190,13 +187,14 @@ export class Canvas {
     return point;
   }
   pointDraw(pointItem) {
-    $(this.el).append(`<div class="point" id="${pointItem.id}"></div>`);
-    $('#' + pointItem.id).css({
+    var point = $(`<div class="point" id="${pointItem.id}"></div>`);
+    point.css({
       left: pointItem._left,
       top: pointItem._top,
       width: this.pixel,
       height: this.pixel
     });
+    $(this.pointsEl).append(point);
   }
   pointRemove(pointIndex) {
     if (this.points[pointIndex]) {
@@ -260,8 +258,7 @@ export class Canvas {
   }
   shadowPointsGet(shadowPoints) {
     var points = shadowPoints || this.shadowPoints;
-    points.push(points.shift());
-    return points;
+    return _.shuffle(points);
   }
   animationStart() {
     if (_.isEmpty(this.animationTasks) || !this.isPlay) {
@@ -278,10 +275,10 @@ export class Canvas {
       }
     });
 
-    if (this.animationSlow || settings.dev) {
+    if (this.animationSlow || config.dev) {
       this.animationTime = setTimeout(() => {
         this.animationStart();
-      }, settings.slowAnimationSpeed || settings.devAnimationSpeed);
+      }, config.slowAnimationSpeed || config.devAnimationSpeed);
       this.animation = true;
     } else {
       this.animationFrame = requestAnimationFrame(() => {
@@ -305,7 +302,7 @@ export class Canvas {
       if (this.animationFrame) {
         cancelAnimationFrame(this.animationFrame);
       }
-      if (settings.dev) {
+      if (config.dev) {
         this.animationTasks = {};
       }
     }
@@ -340,18 +337,13 @@ export class Canvas {
   }
   pause() {
     this.isPlay = false;
-    $('body').addClass('game-pause');
   }
   play() {
     this.isPlay = true;
     this.animationStart();
-    $('body').removeClass('game-pause');
   }
-  gameOver() {
-    this.animationStop();
-    $('body').addClass('game-over');
-  }
-  counterUpdate() {
-    $('#counter').text(this.snake.length);
+  counterUpdate(el) {
+    el = el || '#counter';
+    $(el).text(this.snake.length);
   }
 }

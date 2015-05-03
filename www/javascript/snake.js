@@ -1,6 +1,6 @@
 'use strict';
 
-import {settings} from 'settings';
+import {config} from 'config';
 import {SnakePiece} from 'snake-piece';
 import * as $ from 'jquery';
 import * as _ from 'underscore';
@@ -27,12 +27,12 @@ export class Snake {
     _.extend(this.position, defaultSnakePosition);
 
     canvas.snake = this;
-    canvas.actions.snakeCreated();
 
     this.actions = Reflux.createActions([
       'lengthChanged',
       'trapped'
     ]);
+    canvas.actions.snakeCreated();
 
     canvas.actions.snakeClamped.listen(() => {
       this.clampedSay();
@@ -47,12 +47,13 @@ export class Snake {
   draw(canvas) {
     this.pieces = [];
     this.el = $('#snake');
+    this.el.html('');
     var i = 0, l = this.length;
     for (; i < l; i++) {
       this.pieceAdd(canvas, i);
     }
 
-    //if (settings.dev) {
+    //if (config.dev) {
     //  _.each(this.pieces, (piece, index) => {
     //    var top = 5 + index,
     //      left = 10 - index;
@@ -277,7 +278,7 @@ export class Snake {
     });
     var grid = new PF.Grid(matrix),
       finder = new PF.BestFirstFinder({
-        allowDiagonal: settings.allowDiagonalPath
+        allowDiagonal: config.allowDiagonalPath
       }),
       path = finder.findPath(
         curPosition.left,

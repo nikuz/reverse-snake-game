@@ -1,0 +1,22 @@
+#gameover_ovl {
+    transform: translateX(100%)
+}
+.game-over #gameover_ovl {
+    transform: translateX(0)
+}
+#go_counter {
+    width: 1.5em;
+    height: 1.5em;
+    margin-bottom: .5em;
+    display: inline-block;
+    font-size: 200%;
+    line-height: 150%;
+    text-align: center;
+}
+#c_buttons {
+    opacity: 0;
+    transition: opacity 0.3s ease-out 1s;
+}
+.game-over #c_buttons {
+    opacity: 1;
+}

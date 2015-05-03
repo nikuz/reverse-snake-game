@@ -1,0 +1,17 @@
+#settings_ovl {
+    transform: translateX(100%)
+}
+.settings-shown #settings_ovl {
+    transform: translateX(0)
+}
+#back_settings {
+    position: absolute;
+    left: 15px;
+    top: 20px;
+    height: 1.5em;
+    width: 1.5em;
+    color: #FFF;
+    text-shadow: -1px 1px 1px #000;
+    line-height: 150%;
+    font-size: 200%;
+}

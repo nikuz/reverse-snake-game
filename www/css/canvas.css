@@ -1,3 +1,53 @@
+#counter {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+    border: 1px solid #ccc;
+    font-size: 150%;
+    line-height: 150%;
+    color: #000;
+    text-align: center;
+    opacity: 0;
+    z-index: 0;
+}
+#menu {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    font-size: 150%;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    z-index: 0;
+}
+#pause {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    padding: 6px 10px;
+    font-size: 150%;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    z-index: 0;
+}
+.game-started #pause,
+.game-started #menu {
+    z-index: 10;
+}
+
+.game-started #counter,
+.game-started #menu,
+.game-started #pause {
+    opacity: 1;
+}
+#pause .fa-pause,
+.game-pause #pause .fa-play  {
+    display: none;
+}
+.game-pause #pause .fa-pause { display: block }
+
 #canvas {
     position: relative;
     margin: 0 auto;
@@ -6,40 +56,10 @@
     user-select: none;
     z-index: 5;
 }
-#counter {
-    position: absolute;
-    right: 5px;
-    bottom: 5px;
-    padding: 5px 10px;
-    border: 1px solid #ccc;
-    font-size: 150%;
-    z-index: 0;
-}
-#menu {
-    position: absolute;
-    left: 5px;
-    top: 5px;
-    font-size: 150%;
-    z-index: 10;
-}
-#pause {
-    position: absolute;
-    right: 5px;
-    top: 5px;
-    padding: 6px 10px;
-    font-size: 150%;
-    z-index: 10;
-}
-#pause .fa-pause,
-.game-pause #pause .fa-play {
-    display: none;
-}
-.game-pause #pause .fa-pause { display: block }
 .point {
     background-color: blue;
     position: absolute;
 }
-
 /* dev */
 #dev_canvas {
     position: absolute;

@@ -1,0 +1,38 @@
+#menu_ovl {
+    transform: translateX(-100%);
+    display: none;
+}
+.game-started #menu_ovl,
+.initial-state #menu_ovl {
+    display: block;
+    transform: translateX(0)
+}
+
+.high-scores-shown #menu_ovl {
+    transform: translateX(100%)
+}
+.settings-shown #menu_ovl {
+    transform: translateX(-100%)
+}
+.game-over #menu_ovl {
+    display: none;
+}
+menu {
+    display: inline-block;
+    text-align: center;
+    list-style: none;
+}
+menu li {
+    position: relative;
+    margin-bottom: .3em;
+}
+menu .btn {
+    display: block;
+}
+
+#m-start,
+#m-resume {
+    display: none;
+}
+.initial-state #m-start,
+.game-started #m-resume { display: block }
