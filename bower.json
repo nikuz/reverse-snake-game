@@ -3,6 +3,7 @@
   "version": "0.1",
   "dependencies" : {
     "jquery" : "latest",
+    "jquery-mobile-bower" : "latest",
     "pathfinding" : "latest",
     "reflux" : "latest",
     "requirejs" : "latest",

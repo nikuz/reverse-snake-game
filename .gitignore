@@ -1,4 +1,7 @@
 node_modules/*
-www/bower_components/*
-www/build/*
-www/js/*
+bower_components/*
+build/*
+www/*
+platforms/*
+plugins/*
+.cordova/*

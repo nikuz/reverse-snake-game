@@ -51,8 +51,8 @@
             <p>Your score:</p>
             <div id="go_counter">0</div>
             <div id="c_buttons">
-                <div class="btn btngreen" id="cw-restart">Restart game</div>
-                <div class="btn btnorange" id="cw-hs">Save score</div>
+                <!--<div class="btn btngreen" id="cw-restart">Restart game</div>
+                <div class="btn btnorange" id="cw-hs">Save score</div>-->
             </div>
         </div>
         <div class="ovl" id="settings_ovl">
@@ -76,28 +76,27 @@
     <div id="counter">0</div>
 </div>
 
-    <script type="text/javascript" src="cordova.js"></script>
-    <script type="text/javascript">
-        var require = {
-            baseUrl: 'js',
-            urlArgs: 'bust=' + new Date().getTime(), // TODO: delete for production
-            paths: {
-                jquery: '../bower_components/jquery/dist/jquery.min',
-                jquerymobile: '../bower_components/jquery-mobile/jquery.mobile.custom.min',
-                reflux: '../bower_components/reflux/dist/reflux.min',
-                underscore: '../bower_components/underscore/underscore-min',
-                pathfinding: '../bower_components/pathfinding/pathfinding-browser.min'
-            }
+<script type="text/javascript" src="cordova.js"></script>
+<script type="text/javascript">
+    var require = {
+        baseUrl: 'js',
+        paths: {
+            jquery: '../bower_components/jquery/jquery.min',
+            jquerymobile: '../bower_components/jquery-mobile-bower/js/jquery.mobile-1.4.5.min',
+            reflux: '../bower_components/reflux/dist/reflux.min',
+            underscore: '../bower_components/underscore/underscore-min',
+            pathfinding: '../bower_components/pathfinding/pathfinding-browser.min'
         }
-    </script>
-    <script src="bower_components/requirejs/require.js" data-main="world"></script>
-    <script type="text/template" id="score_tpl">
-        <li id="{{id}}" class="hsl-item {{cl}}">
-            <i class="fa fa-spinner fa-pulse fa-fw"></i>
+    }
+</script>
+<script src="bower_components/requirejs/require.js" data-main="world"></script>
+<script type="text/template" id="score_tpl">
+    <li id="{{id}}" class="hsl-item {{cl}}">
+        <i class="fa fa-spinner fa-pulse fa-fw"></i>
             <span class="hs-score">
                 {{score}}
             </span>
-            <span class="hs-name">{{name}}</span>
-        </li>
-    </script>
+        <span class="hs-name">{{name}}</span>
+    </li>
+</script>
 </body>

@@ -68,59 +68,91 @@ export class Snake {
     //}
   }
   targetGet(canvas) {
-    var shadowPoints = canvas.shadowPointsGet(),
-      points = canvas.points.length ? canvas.points : shadowPoints;
-
-    var curLoop = (points) => {
-      var i = 0, l = points.length,
-        point, tryPath, target;
-
-      for (; i < l; i++) {
-        point = points[i];
-        tryPath = this.getPath(canvas, null, {
-          point: point
-        });
-        if (tryPath.length) {
-          if (points !== shadowPoints) {
-            target = nextLoop(points, i, point, tryPath) || nextLoop(shadowPoints, i, point, tryPath, true);
-          } else {
-            target = nextLoop(points, i, point, tryPath);
-          }
-          if (target) {
-            return target;
-          }
-        }
-      }
-    };
-
-    var nextLoop = (points, curIndex, curPoint, curPath, isShadow) => {
-      if (!points || !points.length) return false;
-
-      var i = 0, l = points.length,
-        nextTryPath;
-
-      for (; i<l; i++) {
-        if (isShadow || curIndex !== i) {
-          nextTryPath = this.targetTryNext(canvas, curIndex, curPoint, curPath, points[i]);
-          if (nextTryPath) {
-            return nextTryPath;
-          }
-        }
-      }
-    };
-
-    var target = points !== shadowPoints ? curLoop(points) || curLoop(shadowPoints) : curLoop(shadowPoints);
-    if (target) {
-      this.targetSet(target);
-      this.inmove && this.move(canvas);
-      return target;
+    var points = canvas.points;
+    if (points.length) {
+      _.each(points, (item, index) => {
+        item.index = index;
+      });
     }
+    points = points.concat(canvas.shadowPointsGet());
+    var i = 0, l = points.length,
+      tryPath, sequence = [],
+      initialPath = [
+        [this.position.left, this.position.top]
+      ],
+      pathes = [],
+      curPath = initialPath,
+      permutations = 0,
+      snakePieces = this.pieces.slice(0),
+      firstPath = this.targetTryNext(canvas, curPath, points[0], snakePieces);
 
+    for (; i<l; i++) {
+      tryPath = this.targetTryNext(canvas, curPath, points[i], snakePieces);
+      if (tryPath) {
+        sequence.push({
+          index: points[i].id === 'shadow_point' ? points[i].id : points[i].index,
+          point: points[i],
+          path: tryPath
+        });
+        if (sequence.length === config.sequenceLength) {
+          break;
+        }
+        pathes.push(tryPath);
+        curPath = tryPath;
+
+        // add virtual piece
+        if (curPath.length > snakePieces.length) {
+          snakePieces.push({
+            position: curPath[curPath.length - snakePieces.length - 1]
+          });
+        } else {
+          snakePieces.push({
+            position: snakePieces[0].getPiecePosition({
+              index: snakePieces.length,
+              canvasSize: {
+                width: canvas.width,
+                height: canvas.height
+              },
+              snakePosition: {
+                top: this.position.top,
+                left: this.position.left
+              },
+              snakeBody: snakePieces,
+              snakeDirection: this.direction
+            })
+          });
+        }
+      } else {
+        permutations += 1;
+        if (permutations === l) {
+          break;
+        }
+        points.push(points.splice(i, 1)[0]);
+        i -= 1;
+        if (sequence.length > 1) {
+          curPath = pathes[pathes.length - 2];
+        } else {
+          curPath = initialPath;
+        }
+        pathes.pop();
+        sequence.pop();
+        snakePieces.pop();
+      }
+    }
+    if (sequence.length) {
+      this.targetSet(sequence[0]);
+      this.inmove && this.move(canvas);
+      if (!_.isEqual(firstPath, sequence[0].path)) {
+        console.log(sequence);
+      }
+      return sequence[0];
+    }
+    console.log(sequence.length);
     log('No one point is achievable');
     this.trappedSay();
     return false;
   }
-  targetTryNext(canvas, curPointIndex, curPoint, curPath, nextPoint) {
+  targetTryNext(canvas, curPath, nextPoint, nextSnake) {
     var curPathLastPoint = curPath.length - 1,
       nextPosition = {
         top: curPath[curPathLastPoint][1],
@@ -131,15 +163,15 @@ export class Snake {
       };
 
     var nextSnakePosition = curPath.slice(0);
-    if (nextSnakePosition.length > this.pieces.length + 1) {
-      nextSnakePosition.splice(0, nextSnakePosition.length - this.pieces.length - 1);
-    } else if (nextSnakePosition.length < this.pieces.length) {
+    if (nextSnakePosition.length > nextSnake.length) {
+      nextSnakePosition.splice(0, nextSnakePosition.length - nextSnake.length);
+    } else if (nextSnakePosition.length < nextSnake.length) {
       let i = 0,
-        l = this.pieces.length - nextSnakePosition.length,
+        l = nextSnake.length - nextSnakePosition.length,
         piece;
 
       for (; i < l; i++) {
-        piece = this.pieces[i].position;
+        piece = nextSnake[i].position;
         nextSnakePosition.push([
           piece.left,
           piece.top
@@ -148,13 +180,8 @@ export class Snake {
     }
 
     var nextPath = this.getPath(canvas, nextPosition, nextTarget, nextSnakePosition);
-
     if (nextPath.length) {
-      return {
-        index: curPoint.id === 'shadow_point' ? curPoint.id : curPointIndex,
-        point: curPoint,
-        path: curPath
-      };
+      return nextPath;
     } else {
       return false;
     }

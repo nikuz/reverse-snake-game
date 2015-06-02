@@ -3,5 +3,6 @@ export var config = {
   devAnimationSpeed: 500,
   slowAnimationSpeed: 200,
   pointsLimit: 10,
-  allowDiagonalPath: false
+  allowDiagonalPath: false,
+  sequenceLength: 5
 };
