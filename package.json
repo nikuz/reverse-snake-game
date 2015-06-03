@@ -14,12 +14,15 @@
   "private": false,
   "dependencies": {
     "babel": "latest",
+    "body-parser": "^1.12.4",
     "bower": "latest",
     "bower-installer": "latest",
     "express": "^4.12.3",
     "grunt": "latest",
     "jasmine": "latest",
-    "karma": "latest"
+    "karma": "latest",
+    "redis": "latest",
+    "underscore": "^1.8.3"
   },
   "bundleDependencies": [],
   "devDependencies": {
